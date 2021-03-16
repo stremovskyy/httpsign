@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -124,7 +125,7 @@ func (a *Authenticator) Authenticated() gin.HandlerFunc {
 
 func (a *Authenticator) printErrorMessage(err error) {
 	if a.debug {
-		fmt.Printf("[HTTP_SIGN][ERROR] %s", err.Error())
+		fmt.Printf("%s [HTTP_SIGN] [ERROR] %s\n", time.Now(), err.Error())
 	}
 }
 
