@@ -91,12 +91,13 @@ func (a *Authenticator) Authenticated() gin.HandlerFunc {
 		for _, v := range a.validators {
 			if err := v.Validate(c.Request); err != nil {
 				c.AbortWithError(http.StatusBadRequest, err)
+				a.printErrorMessage(err)
 				return
 			}
 		}
 		if !a.isValidHeader(sigHeader.headers) {
 			c.AbortWithError(http.StatusBadRequest, ErrHeaderNotEnough)
-			a.printErrorMessage(err)
+			a.printErrorMessage(ErrHeaderNotEnough)
 			return
 		}
 
@@ -116,7 +117,7 @@ func (a *Authenticator) Authenticated() gin.HandlerFunc {
 		signatureBase64 := base64.StdEncoding.EncodeToString(signature)
 		if signatureBase64 != sigHeader.signature {
 			c.AbortWithError(http.StatusUnauthorized, ErrInvalidSign)
-			a.printErrorMessage(err)
+			a.printErrorMessage(ErrInvalidSign)
 			return
 		}
 		c.Next()
@@ -125,7 +126,7 @@ func (a *Authenticator) Authenticated() gin.HandlerFunc {
 
 func (a *Authenticator) printErrorMessage(err error) {
 	if a.debug {
-		fmt.Printf("%s [HTTP_SIGN] [ERROR] %s\n", time.Now(), err.Error())
+		fmt.Printf("%s [HTTP_SIGN] [ERROR] %s\n", time.Now().Format(time.StampMilli), err.Error())
 	}
 }
 

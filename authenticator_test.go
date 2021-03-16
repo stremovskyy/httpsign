@@ -53,7 +53,7 @@ var (
 
 func runTest(secretKeys Secrets, headers []string, v []validator.Validator, req *http.Request) *gin.Context {
 	gin.SetMode(gin.TestMode)
-	auth := NewAuthenticator(secretKeys, WithRequiredHeaders(headers), WithValidator(v...))
+	auth := NewAuthenticator(secretKeys, WithRequiredHeaders(headers), WithValidator(v...), WithDebug(true))
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 	c.Request = req
 	auth.Authenticated()(c)
