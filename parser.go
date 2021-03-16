@@ -56,7 +56,7 @@ func (p *parser) nextParam() (string, string, error) {
 			return key.String(), val.String(), nil
 		case '"':
 			if !keyParsed {
-				return "", "", ErrMisingEqualCharacter
+				return "", "", ErrMissingEqualCharacter
 			}
 			if p.peekChar() != ',' && p.peekChar() != 0 {
 				if err := val.WriteByte(p.ch); err != nil {
@@ -70,7 +70,7 @@ func (p *parser) nextParam() (string, string, error) {
 			if !keyParsed {
 				p.readChar()
 				if p.ch != '"' {
-					return "", "", ErrMisingDoubleQuote
+					return "", "", ErrMissingDoubleQuote
 				}
 				keyParsed = true
 			} else {

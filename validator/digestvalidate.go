@@ -43,16 +43,20 @@ func (v *DigestValidator) Validate(r *http.Request) error {
 }
 
 func calculateDigest(r *http.Request) (string, error) {
+	h := sha256.New()
+
 	if r.ContentLength == 0 {
-		return "", nil
+		_, _ = h.Write([]byte(""))
+		return fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(h.Sum(nil))), nil
 	}
-	//TODO: Read body using buffer to prevent using too much memory
+
+	// TODO: Read body using buffer to prevent using too much memory
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return "", err
 	}
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	h := sha256.New()
+
 	_, err = h.Write(body)
 	if err != nil {
 		return "", err

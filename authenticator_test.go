@@ -25,8 +25,10 @@ const (
 	invalidKeyID           = KeyID("invalid key")
 	invaldAlgo             = "invalidAlgo"
 	requestNilBodySig      = "ewYjBILGshEmTDDMWLeBc9kQfIscSKxmFLnUBU/eXQCb0hrY1jh7U5SH41JmYowuA4p6+YPLcB9z/ay7OvG/Sg=="
+	requestEmptyBodySig    = "zZUb4Qmth9AYi9jid2M1u7R1Qn4pdGQD0GvsMuulUTMh3o9R0PvRsY0lu8fstq8QhB5OFAMfkW3phkVntZiwCQ=="
 	requestBodyDigest      = "SHA-256=uU0nuZNNPgilLlLX2n2r+sSE7+N6U4DukIj3rOLvzek="
 	requestBodyFalseDigest = "SHA-256=fakeDigest="
+	requestBodyEmptyDigest = "SHA-256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
 	requestBodySig         = "s8MEyer3dSpSsnL0+mQvUYgKm2S4AEX+hsvKmeNI7wgtLFplbCZtt8YOcySZrCyYbOJdPF1NASDHfupSuekecg=="
 	requestHost            = "kyber.network"
 	requestHostSig         = "+qpk6uAlILo/1YV1ZDK2suU46fbaRi5guOyg4b6aS4nWqLi9u57V6mVwQNh0s6OpfrVZwAYaWHCmQFCgJiZ6yg=="
@@ -133,11 +135,12 @@ func TestAuthenticateInvalidAlgo(t *testing.T) {
 }
 
 func TestInvalidSign(t *testing.T) {
-	req, err := http.NewRequest("GET", "/", nil)
+	req, err := http.NewRequest("GET", "/", strings.NewReader(sampleBodyContent))
 	require.NoError(t, err)
 	sigHeader := generateSignature(readID, algoHmacSha512, submitHeader, requestNilBodySig)
 	req.Header.Set(authorizationHeader, sigHeader)
 	req.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
+	req.Header.Set("Digest", requestBodyDigest)
 
 	c := runTest(secrets, requiredHeaders, nil, req)
 	assert.Equal(t, http.StatusUnauthorized, c.Writer.Status())
@@ -219,9 +222,10 @@ func TestHttpValidRequest(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/", nil)
 	require.NoError(t, err)
-	sigHeader := generateSignature(readID, algoHmacSha512, submitHeader, requestNilBodySig)
+	sigHeader := generateSignature(readID, algoHmacSha512, submitHeader, requestEmptyBodySig)
 	req.Header.Set(authorizationHeader, sigHeader)
 	req.Header.Set("Date", requestTime.Format(http.TimeFormat))
+	req.Header.Set("Digest", requestBodyEmptyDigest)
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)

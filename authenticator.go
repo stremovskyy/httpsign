@@ -107,13 +107,21 @@ func (a *Authenticator) Authenticated() gin.HandlerFunc {
 			a.printErrorMessage(err)
 			return
 		}
-		signString := constructSignMessage(c.Request, sigHeader.headers)
+
+		signString, err := constructSignMessage(c.Request, sigHeader.headers)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			a.printErrorMessage(err)
+			return
+		}
+
 		signature, err := secret.Algorithm.Sign(signString, secret.Key)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			a.printErrorMessage(err)
 			return
 		}
+
 		signatureBase64 := base64.StdEncoding.EncodeToString(signature)
 		if signatureBase64 != sigHeader.signature {
 			c.AbortWithError(http.StatusUnauthorized, ErrInvalidSign)
@@ -161,8 +169,9 @@ func (a *Authenticator) getSecret(keyID KeyID, algorithm string) (*Secret, error
 	return secret, nil
 }
 
-func constructSignMessage(r *http.Request, headers []string) string {
+func constructSignMessage(r *http.Request, headers []string) (string, error) {
 	var signBuffer bytes.Buffer
+
 	for i, field := range headers {
 		var fieldValue string
 		switch field {
@@ -172,6 +181,9 @@ func constructSignMessage(r *http.Request, headers []string) string {
 			fieldValue = fmt.Sprintf("%s %s", strings.ToLower(r.Method), r.URL.RequestURI())
 		default:
 			fieldValue = r.Header.Get(field)
+			if fieldValue == "" {
+				return "", ErrEmptyHeader
+			}
 		}
 		signString := fmt.Sprintf("%s: %s", field, fieldValue)
 		signBuffer.WriteString(signString)
@@ -179,5 +191,6 @@ func constructSignMessage(r *http.Request, headers []string) string {
 			signBuffer.WriteString("\n")
 		}
 	}
-	return signBuffer.String()
+
+	return signBuffer.String(), nil
 }

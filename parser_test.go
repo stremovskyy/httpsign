@@ -17,7 +17,7 @@ func TestParser(t *testing.T) {
 		{
 			name:  `Missing = character`,
 			input: `keyId="rsa-key-1",algorithm"rsa-sha256",headers="(request-target) host date digest",signature="Hello world"`,
-			err:   ErrMisingEqualCharacter,
+			err:   ErrMissingEqualCharacter,
 		},
 		{
 			name:  `Missing " at end value`,
@@ -27,7 +27,7 @@ func TestParser(t *testing.T) {
 		{
 			name:  `Missing " at begin value`,
 			input: `keyId="rsa-key-1",algorithm=rsa-sha256",headers="(request-target) host date digest",signature="Hello world"`,
-			err:   ErrMisingDoubleQuote,
+			err:   ErrMissingDoubleQuote,
 		},
 		{
 			name:  `empty value`,
