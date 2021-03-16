@@ -26,6 +26,7 @@ type Authenticator struct {
 	secrets    Secrets
 	validators []validator.Validator
 	headers    []string
+	debug      bool
 }
 
 // Option is the option to the Authenticator constructor.
@@ -45,6 +46,12 @@ func WithValidator(validators ...validator.Validator) Option {
 func WithRequiredHeaders(headers []string) Option {
 	return func(a *Authenticator) {
 		a.headers = headers
+	}
+}
+
+func WithDebug(debug bool) Option {
+	return func(a *Authenticator) {
+		a.debug = debug
 	}
 }
 
@@ -77,6 +84,7 @@ func (a *Authenticator) Authenticated() gin.HandlerFunc {
 		sigHeader, err := NewSignatureHeader(c.Request)
 		if err != nil {
 			c.AbortWithError(http.StatusUnauthorized, err)
+			a.printErrorMessage(err)
 			return
 		}
 		for _, v := range a.validators {
@@ -87,26 +95,36 @@ func (a *Authenticator) Authenticated() gin.HandlerFunc {
 		}
 		if !a.isValidHeader(sigHeader.headers) {
 			c.AbortWithError(http.StatusBadRequest, ErrHeaderNotEnough)
+			a.printErrorMessage(err)
 			return
 		}
 
 		secret, err := a.getSecret(sigHeader.keyID, sigHeader.algorithm)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
+			a.printErrorMessage(err)
 			return
 		}
 		signString := constructSignMessage(c.Request, sigHeader.headers)
 		signature, err := secret.Algorithm.Sign(signString, secret.Key)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
+			a.printErrorMessage(err)
 			return
 		}
 		signatureBase64 := base64.StdEncoding.EncodeToString(signature)
 		if signatureBase64 != sigHeader.signature {
 			c.AbortWithError(http.StatusUnauthorized, ErrInvalidSign)
+			a.printErrorMessage(err)
 			return
 		}
 		c.Next()
+	}
+}
+
+func (a *Authenticator) printErrorMessage(err error) {
+	if a.debug {
+		fmt.Printf("[HTTP_SIGN][ERROR] %s", err.Error())
 	}
 }
 
