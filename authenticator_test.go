@@ -233,6 +233,27 @@ func TestHttpValidRequest(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
+func TestHttpValidRequestWithCustomDate(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.Default()
+	auth := NewAuthenticator(secrets, WithValidator(validator.NewDigestValidator(), validator.NewCustomDateValidator("X-DATE", true)))
+	r.Use(auth.Authenticated())
+	r.GET("/", httpTestGet)
+
+	req, err := http.NewRequest("GET", "/", nil)
+	require.NoError(t, err)
+	sigHeader := generateSignature(readID, algoHmacSha512, submitHeader, requestEmptyBodySig)
+	req.Header.Set(authorizationHeader, sigHeader)
+	req.Header.Set("X-DATE", requestTime.Format(http.TimeFormat))
+	req.Header.Set("Digest", requestBodyEmptyDigest)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
 func TestHttpValidRequestBody(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
