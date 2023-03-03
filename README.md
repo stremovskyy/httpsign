@@ -11,8 +11,8 @@ Signing HTTP Messages Middleware base on [HTTP Signatures](https://tools.ietf.or
 package main
 
 import (
-	"github.com/karmadon/httpsign"
-	"github.com/karmadon/httpsign/crypto"
+	"github.com/stremovskyy/httpsign"
+	"github.com/stremovskyy/httpsign/crypto"
 	"github.com/gin-gonic/gin"
 )
 

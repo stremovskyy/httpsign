@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/karmadon/httpsign/crypto"
-	"github.com/karmadon/httpsign/validator"
+	"github.com/stremovskyy/httpsign/crypto"
+	"github.com/stremovskyy/httpsign/validator"
 
 	"github.com/stretchr/testify/require"
 
